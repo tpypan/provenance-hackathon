@@ -1,5 +1,7 @@
 from typing import Any
 
+import pytest
+
 from backend.model.baseline import load_baseline
 from backend.registry import load_registry
 from backend.verify import verify_chain
@@ -7,6 +9,57 @@ from reference_lib import content_hash, sign_attestation
 
 M = load_baseline()
 REG = load_registry()
+
+
+def _linear_chain(n: int) -> list[dict[str, Any]]:
+    atts: list[dict[str, Any]] = []
+    for i in range(n):
+        atts.append(
+            {
+                "attestation_id": f"d-{i}",
+                "version": "1.0",
+                "supplier_id": "sup-0001",
+                "timestamp": "2026-01-01T09:00:00Z",
+                "action_type": "raw_material_supply" if i == 0 else "component_manufacture",
+                "performed_in_country": "CA",
+                "parents": []
+                if i == 0
+                else [{"attestation_id": f"d-{i-1}", "content_hash": "x", "quantity_consumed": 1, "unit": "kg"}],
+                "output": {"name": "w", "quantity_produced": 100, "unit": "kg"},
+                "costs": {
+                    "material_cad": 10 if i == 0 else 0,
+                    "labour_hours": 0 if i == 0 else 5,
+                    "labour_cost_cad": 0 if i == 0 else 100,
+                },
+            }
+        )
+    return atts
+
+
+def test_deep_reverse_ordered_chain_computes_percentage() -> None:
+    # Attestation order is unspecified (FAQ: "sometimes a child appears before its parent").
+    # A deep chain submitted leaf-first must not overflow the cycle detector and fall back
+    # to pct=0; it must still compute the real percentage.
+    n = 1500
+    payload = {"product_attestation_id": f"d-{n-1}", "attestations": list(reversed(_linear_chain(n)))}
+    res = verify_chain(payload, M, REG)
+    assert res["canadian_content_percentage"] > 0
+
+
+def test_compute_failure_still_returns_detected_anomalies(monkeypatch: pytest.MonkeyPatch) -> None:
+    # A failure in percentage computation must not erase integrity detection. The two are
+    # independent: a structural attack should still be reported even if compute() raises.
+    def boom(_ctx: Any) -> Any:
+        raise ValueError("compute exploded")
+
+    monkeypatch.setattr("backend.verify.compute", boom)
+    payload = {
+        "product_attestation_id": "c",
+        "attestations": [{"attestation_id": "c", "parents": [{"attestation_id": "missing"}]}],
+    }
+    res = verify_chain(payload, M, REG)
+    assert res["product_attestation_id"] == "c"
+    assert any(a["type"] == "dangling_parent" for a in res["anomalies"])
 
 
 def test_worked_example_is_clean_and_correct(
