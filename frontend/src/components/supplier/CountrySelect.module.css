@@ -30,7 +30,7 @@
 }
 
 .content {
-  z-index: var(--z-dropdown);
+  z-index: var(--z-popover);
   min-width: var(--radix-select-trigger-width);
   max-height: var(--radix-select-content-available-height);
   background: var(--color-bg);

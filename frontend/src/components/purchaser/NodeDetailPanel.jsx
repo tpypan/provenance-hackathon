@@ -19,7 +19,11 @@ export default function NodeDetailPanel({ attestation, anomalies = [], totalCost
   }
 
   const meta = actionTypeMeta(attestation.action_type)
-  const invalidSig = anomalies.some((a) => a.type === 'invalid_signature')
+  // The verifier reports signature failures as signature_invalid / signature_unknown_supplier
+  // (legacy mock used invalid_signature). Any of these means we can't trust the signature.
+  const sigAnom = anomalies.find((a) =>
+    ['signature_invalid', 'invalid_signature', 'signature_unknown_supplier'].includes(a.type),
+  )
   const cost = directCost(attestation)
   const share = totalCost > 0 ? cost / totalCost : 0
   const isCA = attestation.performed_in_country === 'CA'
@@ -34,8 +38,8 @@ export default function NodeDetailPanel({ attestation, anomalies = [], totalCost
           </span>
         </div>
         <h2 className={styles.name}>{attestation.output?.name}</h2>
-        <StatusDot state={invalidSig ? 'invalid' : 'verified'}>
-          {invalidSig ? 'Signature does not verify' : 'Signature verified (ed25519)'}
+        <StatusDot state={sigAnom ? 'invalid' : 'verified'}>
+          {sigAnom ? anomalyMeta(sigAnom.type, sigAnom.severity).message : 'Signature verified (ed25519)'}
         </StatusDot>
       </header>
 
