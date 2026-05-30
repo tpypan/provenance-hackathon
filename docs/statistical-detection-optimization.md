@@ -61,6 +61,7 @@ not on the finer `(action, output.name)`.
 | 2 | "High-rate / low-hours" joint cost rule (`rate_z > 2.8 AND hours_z < −0.5`) | catches borderline cost outliers; combination absent from genuine chains | **KEPT** |
 | 3 | **CA-only** origin novelty (flag novel CA origin for suppliers with foreign history) | removed ~15 CV false positives vs flagging *any* novel country; no recall loss | **KEPT** |
 | 4 | CV-based threshold selection (round values: `z_rate=3.0`, `z_hours=3.0`, `z_joint=2.8`) | smooth optimum, not knife-edge | **KEPT** |
+| 4a | Conservative action-specific labour threshold (`subassembly: hours_z > 2.6`) | improves t4 labour recall 75.0 % → 78.6 % in CV with one additional clean false positive | **KEPT** |
 | 5 | Per-product `(action, output.name)` conditioning | CV worse for cost (98.3 % vs 98.8 %); finer groups noisier | rejected |
 | 6 | Per-product **max-ceiling** + margin | brittle; 36 CV false positives | rejected |
 | 7 | Per-**supplier** (or supplier×product) conditioning | sampling artifact — per-supplier hours medians cluster tightly (gimbal: 9.7–14.8 around global 12.2); tight per-supplier maxima are undersampling, not real supplier effects | rejected |
@@ -90,9 +91,10 @@ which lowers the overall score. Concrete examples:
 - **labour:** an EO/IR gimbal at 22.7 h, where genuine gimbals reach 23.7 h.
 - **origin:** `sup-0009 → CA`, where CA is that supplier's genuine home 94.8 % of the time.
 
-So the legitimate ceilings are roughly **cost ≈ 82 %, labour ≈ 75 %, origin ≈ 97 %**. Pushing
-past them requires either memorising IDs (fails on held-out) or sub-genuine thresholds
-(false positives that cost more than they gain). Both are out of bounds.
+So the legitimate ceilings are roughly **cost ≈ 82 %, labour ≈ 79 %, origin ≈ 97 %** with
+the current conservative thresholding. Pushing past them requires either memorising IDs
+(fails on held-out) or sub-genuine thresholds whose false positives cost more than they gain.
+Both are out of bounds.
 
 ## Final detector
 
@@ -100,7 +102,8 @@ For each transformation attestation (`hours > 0`), using the per-`action_type` g
 distribution (median / MAD), with `rate = labour_cost / labour_hours`:
 
 - **cost_anomaly** if `rate_z > 3.0` **or** (`rate_z > 2.8` **and** `hours_z < −0.5`).
-- **labour_anomaly** if `hours_z > 3.0`.
+- **labour_anomaly** if `hours_z > 3.0`, except `subassembly` uses the conservative
+  action-specific threshold `hours_z > 2.6`.
 - **origin_anomaly** if `performed_in_country == CA` and the supplier has ≥ 20 prior
   appearances, none in CA.
 - **timing_anomaly** if the time-of-day is outside the learned per-action whitelist.
@@ -117,12 +120,13 @@ and `scripts/cross_validate.py`:
 | | overall | t4_cost | t4_labour | t4_origin | t4_timing | clean | deterministic |
 |---|---|---|---|---|---|---|---|
 | start | 98.0 % | 35.3 | 73.8 | 96.5 | 100 | 100 | 100 |
-| **final (in-sample)** | **98.7 %** | **82.4** | **75.0** | **97.4** | 100 | 99.8 | 100 |
-| **final (5-fold CV)** | **98.8 %** | 82.4 | 75.0 | 97.4 | 100 | 99.8 | 100 |
+| **final (in-sample)** | **98.8 %** | **82.4** | **78.6** | **97.4** | 100 | 99.7 | 100 |
+| **final (5-fold CV)** | **98.8 %** | 82.4 | 78.6 | 97.4 | 100 | 99.8 | 100 |
 
-The final design accepts ~4 clean false positives (0.6 %) in exchange for cost recall
-53 % → 82 %; cross-validation confirms this is net **+1.7 %** on the held-out proxy. The
-in-sample / CV gap is now ~0, i.e. the model generalizes.
+The final design accepts ~5 clean false positives (0.7 %) in exchange for cost recall
+53 % → 82 % and labour recall 75 % → 78.6 %; cross-validation confirms the change preserves
+the held-out proxy score while improving the remaining statistical category. The in-sample /
+CV gap remains ~0, i.e. the model generalizes.
 
 ## Reproduce
 
