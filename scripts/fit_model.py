@@ -30,6 +30,7 @@ THRESHOLDS = {
     "min_group_n": 40,
     "z_rate": 3.0,
     "z_hours": 3.0,
+    "z_hours_by_action": {"subassembly": 2.6},
     "z_joint": 2.8,
     "origin_min_total": 20,
 }

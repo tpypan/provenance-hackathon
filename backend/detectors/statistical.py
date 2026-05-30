@@ -5,6 +5,21 @@ from backend.detectors.base import Anomaly
 from backend.model.baseline import Baseline
 
 
+def _threshold_for_action(
+    thresholds: dict[str, object],
+    key: str,
+    action: object,
+    default: float,
+) -> float:
+    by_action = thresholds.get(f"{key}_by_action")
+    if isinstance(by_action, dict):
+        value = by_action.get(str(action))
+        if isinstance(value, int | float):
+            return float(value)
+    value = thresholds.get(key)
+    return float(value) if isinstance(value, int | float) else default
+
+
 def detect_statistical(ctx: ChainContext) -> list[Anomaly]:
     """Flag attestations whose values are anomalous relative to the genuine distribution
     learned from clean chains, conditioned on action_type.
@@ -25,9 +40,6 @@ def detect_statistical(ctx: ChainContext) -> list[Anomaly]:
     if not isinstance(model, Baseline):
         return out
     th = model.thresholds
-    z_rate = th.get("z_rate", 3.0)
-    z_hours = th.get("z_hours", 3.0)
-    z_joint = th.get("z_joint", 2.8)
 
     for aid, att in ctx.attestations.items():
         action = att.get("action_type")
@@ -38,6 +50,9 @@ def detect_statistical(ctx: ChainContext) -> list[Anomaly]:
             rate = labour / hours
             rate_z = model.rate_z(action, name, rate)
             hours_z = model.hours_z(action, name, hours)
+            z_rate = _threshold_for_action(th, "z_rate", action, 3.0)
+            z_hours = _threshold_for_action(th, "z_hours", action, 3.0)
+            z_joint = _threshold_for_action(th, "z_joint", action, 2.8)
             if rate_z > z_rate or (rate_z > z_joint and hours_z < -0.5):
                 out.append(Anomaly("cost_anomaly", aid, "soft", f"labour rate {rate:.0f}/h (z={rate_z:+.1f})"))
             if hours_z > z_hours:
