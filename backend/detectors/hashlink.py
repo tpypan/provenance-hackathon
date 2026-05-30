@@ -26,8 +26,11 @@ def detect_hashlink(ctx: ChainContext) -> list[Anomaly]:
     if not isinstance(registry, Registry):
         return out
 
-    leaf_anchor = registry.anchor(ctx.product_id)
-    expected_product = leaf_anchor["product_id"] if leaf_anchor else None
+    # The product under verification is identified by the leaf attestation id. Every anchored
+    # attestation in a genuine chain belongs to that product; one anchored to a different
+    # product is cross-product reuse — true even when the leaf itself is unanchored (a new
+    # product splicing in a genuine attestation from another product's chain).
+    expected_product = ctx.product_id or None
     for aid in ctx.attestations:
         anchor = registry.anchor(aid)
         if anchor is None:
