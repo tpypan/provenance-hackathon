@@ -20,27 +20,41 @@ class ChainContext:
 
 
 def _detect_cycles(attestations: dict[str, dict[str, Any]]) -> set[str]:
+    """Iterative DFS with white/grey/black colouring; returns every node on a cycle.
+
+    Equivalent to the recursive three-colour DFS but uses an explicit stack so deep chains
+    (submitted in any order) cannot overflow Python's recursion limit. `path` mirrors the
+    recursion stack: a grey parent is a back-edge, and the cycle is the path slice from it.
+    """
     white, grey, black = 0, 1, 2
     color = {aid: white for aid in attestations}
     cycle_nodes: set[str] = set()
 
-    def visit(aid: str, stack: list[str]) -> None:
-        color[aid] = grey
-        stack.append(aid)
-        for pref in get_parents(attestations[aid]):
-            pid = pref.get("attestation_id")
-            if pid not in attestations:
-                continue
-            if color[pid] == grey:
-                cycle_nodes.update(stack[stack.index(pid) :])
-            elif color[pid] == white:
-                visit(pid, stack)
-        stack.pop()
-        color[aid] = black
-
-    for aid in attestations:
-        if color[aid] == white:
-            visit(aid, [])
+    for root in attestations:
+        if color[root] != white:
+            continue
+        color[root] = grey
+        path: list[str] = [root]
+        stack: list[tuple[str, Any]] = [(root, iter(get_parents(attestations[root])))]
+        while stack:
+            aid, parents = stack[-1]
+            descended = False
+            for pref in parents:
+                pid = pref.get("attestation_id")
+                if pid not in attestations:
+                    continue
+                if color[pid] == grey:
+                    cycle_nodes.update(path[path.index(pid) :])
+                elif color[pid] == white:
+                    color[pid] = grey
+                    path.append(pid)
+                    stack.append((pid, iter(get_parents(attestations[pid]))))
+                    descended = True
+                    break
+            if not descended:
+                color[aid] = black
+                stack.pop()
+                path.pop()
     return cycle_nodes
 
 
