@@ -1,0 +1,105 @@
+/* Form state layout */
+.formWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.formScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s-6);
+}
+
+.formFooter {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-4) var(--s-6);
+  border-top: 1px solid var(--color-border);
+}
+
+.primary {
+  height: 40px;
+  padding: 0 var(--s-5, 20px);
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--r-input);
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.primary:hover {
+  opacity: 0.9;
+}
+.primary:active {
+  transform: translateY(1px);
+}
+
+.secondary {
+  height: 40px;
+  padding: 0 var(--s-4);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  border: 1px solid var(--color-border-mid);
+  border-radius: var(--r-input);
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color var(--dur) var(--ease-out);
+}
+.secondary:hover {
+  border-color: var(--color-ink);
+}
+
+/* Success state */
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: var(--s-4);
+  padding: var(--s-8);
+  text-align: center;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  color: var(--ok);
+}
+
+.successTitle {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.attId {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.successSub {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}

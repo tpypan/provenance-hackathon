@@ -49,12 +49,6 @@ export default function LookupPage() {
           </p>
         )}
 
-        <div className={styles.scanRow}>
-          <button type="button" className={styles.scan} disabled>
-            Scan QR code
-          </button>
-          <span className={styles.soon}>Coming soon</span>
-        </div>
       </div>
 
       <div className={styles.samples}>

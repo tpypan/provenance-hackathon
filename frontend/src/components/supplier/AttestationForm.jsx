@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useEffect, useMemo, useState } from 'react'
 import { Progress } from 'radix-ui'
 
 import ActionTypeSelector from './ActionTypeSelector.jsx'
@@ -38,7 +38,10 @@ function genHash(seed) {
   return out.slice(0, 64)
 }
 
-export default function AttestationForm({ options = [], onSubmit }) {
+const AttestationForm = forwardRef(function AttestationForm(
+  { options = [], onSubmit, onClose, onNavChange },
+  ref,
+) {
   const [form, setForm] = useState(EMPTY)
   const [stepIdx, setStepIdx] = useState(0)
   const [showErrors, setShowErrors] = useState(false)
@@ -57,6 +60,7 @@ export default function AttestationForm({ options = [], onSubmit }) {
   }, [isRaw])
 
   const step = steps[Math.min(stepIdx, steps.length - 1)]
+  const isLast = stepIdx === steps.length - 1
 
   function errorsFor(id) {
     const e = {}
@@ -73,7 +77,6 @@ export default function AttestationForm({ options = [], onSubmit }) {
     return e
   }
 
-  // inputs step is valid when at least one parent is chosen with a positive quantity
   const inputsValid =
     isRaw || (form.parents.length > 0 && form.parents.every((p) => Number(p.quantity_consumed) > 0))
 
@@ -83,8 +86,6 @@ export default function AttestationForm({ options = [], onSubmit }) {
   }
 
   const overConsumed = form.parents.filter((p) => Number(p.quantity_consumed) > Number(p.available))
-
-  const isLast = stepIdx === steps.length - 1
   const currentErrors = showErrors ? errorsFor(step.id) : {}
 
   function goNext() {
@@ -135,6 +136,24 @@ export default function AttestationForm({ options = [], onSubmit }) {
     }
     onSubmit?.(attestation)
   }
+
+  // Always-fresh references so the imperative handle never goes stale
+  const goNextRef = useRef(goNext)
+  const goBackRef = useRef(goBack)
+  goNextRef.current = goNext
+  goBackRef.current = goBack
+
+  useImperativeHandle(ref, () => ({
+    goNext: () => goNextRef.current(),
+    goBack: () => goBackRef.current(),
+  }), [])
+
+  // Notify parent whenever nav state changes so it can render the correct button label
+  const onNavChangeRef = useRef(onNavChange)
+  onNavChangeRef.current = onNavChange
+  useEffect(() => {
+    onNavChangeRef.current?.({ isLast, stepIdx, stepsLen: steps.length })
+  }, [isLast, stepIdx, steps.length])
 
   const pct = ((stepIdx + 1) / steps.length) * 100
 
@@ -240,24 +259,21 @@ export default function AttestationForm({ options = [], onSubmit }) {
             </div>
           )}
         </div>
-
-        <footer className={styles.nav}>
-          {stepIdx > 0 ? (
-            <button type="button" className={styles.secondary} onClick={goBack}>
-              Back
-            </button>
-          ) : (
-            <span />
-          )}
-          <button type="button" className={styles.primary} onClick={goNext}>
-            {isLast ? 'Sign & submit' : 'Continue'}
-          </button>
-        </footer>
       </section>
 
       <div className={styles.previewCol}>
+        {onClose && (
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+              <line x1="2" y1="2" x2="14" y2="14" />
+              <line x1="14" y1="2" x2="2" y2="14" />
+            </svg>
+          </button>
+        )}
         <AttestationPreviewCard form={form} />
       </div>
     </div>
   )
-}
+})
+
+export default AttestationForm

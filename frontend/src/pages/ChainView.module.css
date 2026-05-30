@@ -12,12 +12,58 @@
   min-height: 0;
 }
 
+.graphWrap {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shared pill button style for graph overlays */
+.homeBtn,
+.addAttBtn {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 36px;
+  padding: 0 var(--s-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-mid);
+  border-radius: var(--r-input);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  text-decoration: none;
+}
+.homeBtn:hover,
+.addAttBtn:hover {
+  border-color: var(--color-ink);
+  box-shadow: var(--shadow-node-hover);
+}
+
+.homeBtn {
+  top: var(--s-4);
+  right: var(--s-4);
+}
+
+.addAttBtn {
+  bottom: var(--s-4);
+  left: var(--s-4);
+}
+
 .side {
   width: var(--panel-w);
   flex: none;
   border-left: 1px solid var(--color-border);
   background: var(--color-bg);
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 @media (max-width: 900px) {
