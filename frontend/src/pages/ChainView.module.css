@@ -38,13 +38,18 @@
   font-weight: 500;
   color: var(--color-ink);
   box-shadow: var(--shadow-card);
-  transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
   text-decoration: none;
+  transition: border-color var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .homeBtn:hover,
 .addAttBtn:hover {
   border-color: var(--color-ink);
   box-shadow: var(--shadow-node-hover);
+}
+.homeBtn:active,
+.addAttBtn:active {
+  transform: scale(0.96);
 }
 
 .homeBtn {

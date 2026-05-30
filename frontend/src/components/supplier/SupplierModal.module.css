@@ -5,6 +5,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  animation: fadeUp var(--dur-slow) var(--ease-out) both;
 }
 
 .formScroll {
@@ -34,11 +35,15 @@
   font-weight: 500;
   transition: opacity var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
-.primary:hover {
+.primary:not(:disabled):hover {
   opacity: 0.9;
 }
-.primary:active {
-  transform: translateY(1px);
+.primary:not(:disabled):active {
+  transform: scale(0.96);
+}
+.primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .secondary {
@@ -50,10 +55,13 @@
   border-radius: var(--r-input);
   font-size: 14px;
   font-weight: 500;
-  transition: border-color var(--dur) var(--ease-out);
+  transition: border-color var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .secondary:hover {
   border-color: var(--color-ink);
+}
+.secondary:active {
+  transform: scale(0.96);
 }
 
 /* Success state */
@@ -66,6 +74,7 @@
   gap: var(--s-4);
   padding: var(--s-8);
   text-align: center;
+  animation: fadeUp var(--dur-slow) var(--ease-out) both;
 }
 
 .check {
@@ -84,6 +93,7 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0;
+  text-wrap: balance;
 }
 
 .attId {

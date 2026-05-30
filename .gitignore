@@ -36,3 +36,6 @@ desktop.ini
 node_modules/
 dist/
 .next/
+
+.agents/
+skills-lock.json

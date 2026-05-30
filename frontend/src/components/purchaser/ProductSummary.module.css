@@ -4,6 +4,7 @@
   gap: var(--s-5, 20px);
   padding: var(--s-4);
   border-bottom: 1px solid var(--color-border);
+  animation: fadeUp 0.22s var(--ease-out) both;
 }
 
 .header {
@@ -23,6 +24,7 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
+  text-wrap: balance;
 }
 .idRow {
   display: flex;

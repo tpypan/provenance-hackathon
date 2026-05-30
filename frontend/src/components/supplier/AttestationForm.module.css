@@ -26,10 +26,14 @@
   border-radius: var(--r-pill);
   text-align: left;
   color: var(--color-muted);
-  transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+  transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .stepItem:hover {
   background: var(--color-surface);
+}
+.stepItem:active {
+  transform: scale(0.97);
 }
 .stepNum {
   display: inline-flex;
@@ -90,6 +94,7 @@
   flex-direction: column;
   gap: var(--s-1);
   margin-top: var(--s-4);
+  animation: fadeUp var(--dur-slow) var(--ease-out) both;
 }
 .stepCount {
   font-size: 11px;
@@ -102,13 +107,16 @@
   font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 .stepDesc {
   font-size: 14px;
   color: var(--color-muted);
+  text-wrap: pretty;
 }
 .body {
   margin-top: var(--s-4);
+  animation: fadeUp var(--dur-slow) var(--ease-out) 60ms both;
 }
 .locationGrid {
   display: grid;
@@ -152,12 +160,21 @@
   border-radius: var(--r-pill);
   color: var(--color-muted);
   transition: color var(--dur) var(--ease-out), background var(--dur) var(--ease-out),
-    border-color var(--dur) var(--ease-out);
+    border-color var(--dur) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 .closeBtn:hover {
   color: var(--color-ink);
   background: var(--color-surface-2);
   border-color: var(--color-ink);
+}
+.closeBtn:active {
+  transform: scale(0.9);
+}
+.closeBtn svg {
+  transition: transform var(--dur) var(--ease-out);
+}
+.closeBtn:hover svg {
+  transform: rotate(90deg);
 }
 
 @media (max-width: 1024px) {

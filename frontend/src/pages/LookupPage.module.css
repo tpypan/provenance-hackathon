@@ -62,7 +62,7 @@
   opacity: 0.9;
 }
 .primary:active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.97);
 }
 .error {
   font-size: 13px;
@@ -120,10 +120,15 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--r-input);
-  transition: border-color var(--dur) var(--ease-out);
+  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .sample:hover {
   border-color: var(--color-border-mid);
+  background: var(--color-surface-2);
+}
+.sample:active {
+  transform: scale(0.99);
 }
 .sampleName {
   font-size: 14px;

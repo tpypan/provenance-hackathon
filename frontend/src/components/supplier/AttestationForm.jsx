@@ -87,6 +87,7 @@ const AttestationForm = forwardRef(function AttestationForm(
 
   const overConsumed = form.parents.filter((p) => Number(p.quantity_consumed) > Number(p.available))
   const currentErrors = showErrors ? errorsFor(step.id) : {}
+  const isValid = stepValid(step.id)
 
   function goNext() {
     if (!stepValid(step.id)) {
@@ -152,8 +153,8 @@ const AttestationForm = forwardRef(function AttestationForm(
   const onNavChangeRef = useRef(onNavChange)
   onNavChangeRef.current = onNavChange
   useEffect(() => {
-    onNavChangeRef.current?.({ isLast, stepIdx, stepsLen: steps.length })
-  }, [isLast, stepIdx, steps.length])
+    onNavChangeRef.current?.({ isLast, stepIdx, stepsLen: steps.length, isValid })
+  }, [isLast, stepIdx, steps.length, isValid])
 
   const pct = ((stepIdx + 1) / steps.length) * 100
 
@@ -185,7 +186,7 @@ const AttestationForm = forwardRef(function AttestationForm(
           <Progress.Indicator className={styles.progressInd} style={{ transform: `translateX(-${100 - pct}%)` }} />
         </Progress.Root>
 
-        <header className={styles.stepHeader}>
+        <header className={styles.stepHeader} key={step.id}>
           <span className={styles.stepCount}>
             Step {stepIdx + 1} of {steps.length}
           </span>
@@ -193,7 +194,7 @@ const AttestationForm = forwardRef(function AttestationForm(
           <p className={styles.stepDesc}>{step.desc}</p>
         </header>
 
-        <div className={styles.body}>
+        <div className={styles.body} key={`body-${step.id}`}>
           {step.id === 'type' && (
             <ActionTypeSelector
               value={form.action_type}

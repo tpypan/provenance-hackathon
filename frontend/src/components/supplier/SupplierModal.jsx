@@ -6,7 +6,7 @@ import styles from './SupplierModal.module.css'
 
 export default function SupplierModal({ isOpen, onClose, chain, productName, onAttestation }) {
   const [result, setResult] = useState(null)
-  const [navState, setNavState] = useState({ isLast: false, stepIdx: 0, stepsLen: 1 })
+  const [navState, setNavState] = useState({ isLast: false, stepIdx: 0, stepsLen: 1, isValid: false })
   const formRef = useRef(null)
 
   function handleSubmit(attestation) {
@@ -71,6 +71,7 @@ export default function SupplierModal({ isOpen, onClose, chain, productName, onA
               type="button"
               className={styles.primary}
               onClick={() => formRef.current?.goNext()}
+              disabled={!navState.isValid}
             >
               {navState.isLast ? 'Sign & submit' : 'Continue'}
             </button>

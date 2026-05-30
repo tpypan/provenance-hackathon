@@ -1,9 +1,14 @@
+@keyframes barFillIn {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 .panel {
   display: flex;
   flex-direction: column;
   gap: var(--s-5, 20px);
   padding: var(--s-4);
-  animation: fadeIn 0.2s var(--ease-out) both;
+  animation: fadeUp 0.22s var(--ease-out) both;
 }
 
 .empty {
@@ -12,6 +17,7 @@
   gap: var(--s-2);
   padding: var(--s-8) var(--s-4);
   text-align: center;
+  animation: fadeUp 0.22s var(--ease-out) both;
 }
 .emptyTitle {
   font-size: 14px;
@@ -22,6 +28,7 @@
   font-size: 13px;
   color: var(--color-muted);
   line-height: 1.5;
+  text-wrap: pretty;
 }
 
 .header {
@@ -50,6 +57,7 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.25;
+  text-wrap: balance;
 }
 
 .section {
@@ -99,6 +107,9 @@
   height: 100%;
   background: var(--color-ink);
   border-radius: 99px;
+  transform-origin: left;
+  will-change: transform;
+  animation: barFillIn 0.55s var(--ease-out) 0.08s both;
 }
 .caption {
   font-size: 12px;
@@ -165,4 +176,5 @@
   font-size: 12px;
   color: var(--color-muted);
   line-height: 1.45;
+  text-wrap: pretty;
 }
