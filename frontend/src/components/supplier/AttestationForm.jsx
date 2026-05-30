@@ -6,45 +6,32 @@ import ParentPicker from './ParentPicker.jsx'
 import OutputFields from './OutputFields.jsx'
 import CostFields from './CostFields.jsx'
 import CountrySelect from './CountrySelect.jsx'
+import SupplierSelect from './SupplierSelect.jsx'
 import AttestationPreviewCard from './AttestationPreviewCard.jsx'
-import { Field, TextInput } from '../form/Field.jsx'
+import { Field } from '../form/Field.jsx'
 import styles from './AttestationForm.module.css'
 
 const EMPTY = {
   action_type: '',
-  supplier_id: 'sup-avss-corp',
+  supplier_id: '',
   performed_in_country: '',
   parents: [],
   output: { name: '', quantity_produced: '', unit: 'units' },
   costs: { material_cad: '', labour_hours: '', labour_cost_cad: '' },
 }
 
-function genHash(seed) {
-  let h = 2166136261 >>> 0
-  const s = String(seed) + Date.now()
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  let out = ''
-  for (let i = 0; i < 8; i++) {
-    h ^= h << 13
-    h >>>= 0
-    h ^= h >> 17
-    h ^= h << 5
-    h >>>= 0
-    out += h.toString(16).padStart(8, '0')
-  }
-  return out.slice(0, 64)
-}
-
 const AttestationForm = forwardRef(function AttestationForm(
-  { options = [], onSubmit, onClose, onNavChange },
+  { options = [], suppliers = [], defaultSupplierId = '', productId, onSubmit, onClose, onNavChange },
   ref,
 ) {
-  const [form, setForm] = useState(EMPTY)
+  const [form, setForm] = useState(() => ({ ...EMPTY, supplier_id: defaultSupplierId }))
   const [stepIdx, setStepIdx] = useState(0)
   const [showErrors, setShowErrors] = useState(false)
+
+  // Adopt the default supplier once /api/suppliers resolves (unless the user already chose).
+  useEffect(() => {
+    if (defaultSupplierId) setForm((f) => (f.supplier_id ? f : { ...f, supplier_id: defaultSupplierId }))
+  }, [defaultSupplierId])
 
   const isRaw = form.action_type === 'raw_material_supply'
 
@@ -108,18 +95,16 @@ const AttestationForm = forwardRef(function AttestationForm(
   }
 
   function submit() {
-    const attestation = {
-      attestation_id: `att-new-${Date.now().toString(36)}`,
-      version: '1.0',
-      supplier_id: form.supplier_id.trim(),
-      timestamp: new Date().toISOString(),
+    // Emit an /api/attestations request body. The backend resolves each parent's real
+    // content_hash from the store, then canonicalizes and Ed25519-signs the attestation.
+    const body = {
+      supplier_id: form.supplier_id,
       action_type: form.action_type,
       performed_in_country: form.performed_in_country,
       parents: isRaw
         ? []
         : form.parents.map((p) => ({
             attestation_id: p.attestation_id,
-            content_hash: genHash(p.attestation_id),
             quantity_consumed: Number(p.quantity_consumed) || 0,
             unit: p.unit,
           })),
@@ -133,9 +118,9 @@ const AttestationForm = forwardRef(function AttestationForm(
         labour_hours: Number(form.costs.labour_hours) || 0,
         labour_cost_cad: Number(form.costs.labour_cost_cad) || 0,
       },
-      signature: { algorithm: 'ed25519', value: 'demo-unsigned' },
+      ...(productId ? { product_id: productId } : {}),
     }
-    onSubmit?.(attestation)
+    onSubmit?.(body)
   }
 
   // Always-fresh references so the imperative handle never goes stale
@@ -238,13 +223,12 @@ const AttestationForm = forwardRef(function AttestationForm(
                   onChange={(performed_in_country) => setForm((f) => ({ ...f, performed_in_country }))}
                 />
               </Field>
-              <Field label="Supplier id" htmlFor="loc-supplier" error={currentErrors.supplier_id}>
-                <TextInput
+              <Field label="Supplier" htmlFor="loc-supplier" error={currentErrors.supplier_id}>
+                <SupplierSelect
                   id="loc-supplier"
-                  className="mono"
+                  suppliers={suppliers}
                   value={form.supplier_id}
-                  onChange={(e) => setForm((f) => ({ ...f, supplier_id: e.target.value }))}
-                  invalid={!!currentErrors.supplier_id}
+                  onChange={(supplier_id) => setForm((f) => ({ ...f, supplier_id }))}
                 />
               </Field>
               {overConsumed.length > 0 && (

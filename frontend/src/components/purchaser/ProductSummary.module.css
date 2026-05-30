@@ -104,3 +104,14 @@
   color: var(--color-muted);
   line-height: 1.5;
 }
+
+.qrRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+.qrMeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}

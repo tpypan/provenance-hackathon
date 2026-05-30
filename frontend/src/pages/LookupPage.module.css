@@ -70,73 +70,22 @@
   color: var(--color-ink);
 }
 
-.scanRow {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  margin-top: var(--s-1);
-}
-.scan {
+.scanBtn {
+  align-self: flex-start;
   height: 36px;
   padding: 0 var(--s-4);
+  margin-top: var(--s-1);
   background: var(--color-surface);
-  border: 1px dashed var(--color-border-mid);
+  border: 1px solid var(--color-border-mid);
   border-radius: var(--r-input);
   font-size: 13px;
-  color: var(--color-muted);
-  cursor: not-allowed;
-}
-.soon {
-  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-faint);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
 }
-
-.samples {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-3);
-}
-.samplesLabel {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
-.sampleList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-}
-.sample {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-4);
-  padding: var(--s-3) var(--s-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--r-input);
-  transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-.sample:hover {
-  border-color: var(--color-border-mid);
-  background: var(--color-surface-2);
-}
-.sample:active {
-  transform: scale(0.99);
-}
-.sampleName {
-  font-size: 14px;
-  font-weight: 500;
-}
-.sampleId {
-  font-size: 12px;
-  color: var(--color-muted);
+.scanBtn:hover {
+  border-color: var(--color-ink);
 }
 
 @media (max-width: 560px) {

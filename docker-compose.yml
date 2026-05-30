@@ -5,6 +5,9 @@ services:
       - "8000:8000"
     environment:
       - STORE_BACKEND=memory
+      # Load training_corpus.jsonl into the store so the /api/* browse routes serve real
+      # chains; /verify stays stateless. Use SEED=none to keep the store empty.
+      - SEED=corpus
 
   frontend:
     build: ./frontend
@@ -12,5 +15,8 @@ services:
       - "5173:5173"
     depends_on:
       - verifier
+    environment:
+      # The Vite dev proxy forwards /api + /verify to the verifier service.
+      - BACKEND_ORIGIN=http://verifier:8000
     volumes:
       - ./frontend/src:/app/src

@@ -111,7 +111,7 @@ export default function NodeDetailPanel({ attestation, anomalies = [], totalCost
         <Section title="Flags on this node">
           <ul className={styles.flags}>
             {anomalies.map((a, i) => {
-              const am = anomalyMeta(a.type)
+              const am = anomalyMeta(a.type, a.severity)
               return (
                 <li key={i} className={styles.flag}>
                   <SeverityDot severity={am.severity} />

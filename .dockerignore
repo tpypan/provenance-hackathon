@@ -3,4 +3,4 @@ docs
 .git
 __pycache__
 *.pyc
-training_corpus.jsonl
+# training_corpus.jsonl is COPYed into the image so SEED=corpus can load it.

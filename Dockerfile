@@ -7,6 +7,7 @@ COPY reference_lib ./reference_lib
 COPY registry ./registry
 COPY private_keys ./private_keys
 COPY backend ./backend
+COPY training_corpus.jsonl ./training_corpus.jsonl
 ENV PROVENANCE_ROOT=/app
 EXPOSE 8000
 CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]

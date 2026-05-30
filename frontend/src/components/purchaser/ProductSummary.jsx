@@ -1,3 +1,4 @@
+import { QRCodeCanvas } from 'qrcode.react'
 import StatusDot from '../StatusDot.jsx'
 import DesignationBadge from '../DesignationBadge.jsx'
 import CopyButton from '../CopyButton.jsx'
@@ -48,6 +49,22 @@ export default function ProductSummary({ product, verification, chain }) {
 
       {anomalyCount > 0 && (
         <p className={styles.hint}>Flagged nodes are highlighted in the graph. Select one to see the issue.</p>
+      )}
+
+      {product?.hash && (
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Scan to verify</h3>
+          <div className={styles.qrRow}>
+            <QRCodeCanvas value={product.hash} size={112} fgColor="#0F1117" bgColor="#FFFFFF" level="M" marginSize={2} />
+            <div className={styles.qrMeta}>
+              <span className={styles.hint}>Content hash — the chain&apos;s tamper-proof fingerprint.</span>
+              <div className={styles.idRow}>
+                <span className="mono">{truncateMiddle(product.hash, 10, 8)}</span>
+                <CopyButton value={product.hash} />
+              </div>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   )

@@ -14,6 +14,7 @@ from backend.core.parsing import parse_request
 from backend.model.baseline import Baseline, load_baseline
 from backend.registry import Registry, load_registry
 from backend.schemas import IssueRequest
+from backend.seed import SEED_CORPUS_VALUES, resolve as resolve_query, seed_state
 from backend.store.base import AttestationStore
 from backend.store.memory import InMemoryStore
 from backend.store.sqlite import SqliteStore
@@ -28,7 +29,14 @@ def _ensure_state() -> None:
     if "registry" not in STATE:
         STATE["registry"] = load_registry()
     if "store" not in STATE:
-        STATE["store"] = SqliteStore(config.SQLITE_PATH) if config.STORE_BACKEND == "sqlite" else InMemoryStore()
+        store: AttestationStore = (
+            SqliteStore(config.SQLITE_PATH) if config.STORE_BACKEND == "sqlite" else InMemoryStore()
+        )
+        STATE["store"] = store
+        # SEED=none (default) keeps the store empty so /verify stays stateless and the
+        # grader is unaffected; SEED=corpus loads training_corpus.jsonl + a resolve index.
+        if config.SEED in SEED_CORPUS_VALUES:
+            STATE.update(seed_state(store, config.TRAINING_CORPUS_PATH))
 
 
 @asynccontextmanager
@@ -146,6 +154,22 @@ def list_products() -> list[dict[str, str]]:
     return [product.__dict__ for product in _store().list_products()]
 
 
+@app.get("/api/resolve")
+def resolve(q: str) -> dict[str, str]:
+    """Resolve an attestation id or 64-hex content hash to its product id.
+
+    Shared by the purchaser lookup box and the QR scanner. Falls back to treating ``q``
+    as a product id directly (so unseeded supplier-built chains still resolve)."""
+    _ensure_state()
+    index = cast(dict[str, str], STATE.get("resolve_index") or {})
+    product_id = resolve_query(index, q)
+    if product_id is None and _store().get(q.strip()) is not None:
+        product_id = q.strip()
+    if product_id is None:
+        raise HTTPException(status_code=404, detail="not found")
+    return {"product_attestation_id": product_id}
+
+
 @app.get("/api/products/{product_attestation_id}")
 def get_product(product_attestation_id: str) -> dict[str, object]:
     chain = _store().resolve_chain(product_attestation_id)
@@ -179,7 +203,19 @@ def get_product(product_attestation_id: str) -> dict[str, object]:
         for pref in att.get("parents") or []:
             edges.append({"from": pref.get("attestation_id"), "to": aid})
 
+    leaf = ctx.attestations.get(product_attestation_id, {})
+    try:
+        leaf_hash = content_hash(leaf) if leaf else ""
+    except Exception:
+        leaf_hash = ""
+
     return {
+        "product": {
+            "product_attestation_id": product_attestation_id,
+            "name": (leaf.get("output") or {}).get("name", ""),
+            "maker": leaf.get("supplier_id", ""),
+            "content_hash": leaf_hash,
+        },
         "chain": payload,
         "verification": verification,
         "graph": {"nodes": nodes, "edges": edges},

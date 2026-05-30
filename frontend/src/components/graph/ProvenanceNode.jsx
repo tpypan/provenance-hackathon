@@ -14,8 +14,8 @@ export default function ProvenanceNode({ data, selected }) {
   const isCA = att.performed_in_country === 'CA'
   const cost = directCost(att)
 
-  const worstAnom = severity ? anomalies.find((a) => anomalyMeta(a.type).severity === severity) : null
-  const worstMessage = worstAnom ? anomalyMeta(worstAnom.type).message : ''
+  const worstAnom = severity ? anomalies.find((a) => anomalyMeta(a.type, a.severity).severity === severity) : null
+  const worstMessage = worstAnom ? anomalyMeta(worstAnom.type, worstAnom.severity).message : ''
   const extra = anomalies.length - 1
 
   const cls = [

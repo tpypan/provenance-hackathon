@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ChainGraph from '../components/graph/ChainGraph.jsx'
 import ProductSummary from '../components/purchaser/ProductSummary.jsx'
 import NodeDetailPanel from '../components/purchaser/NodeDetailPanel.jsx'
 import SupplierModal from '../components/supplier/SupplierModal.jsx'
 import { directCost } from '../lib/format.js'
+import { verifyChain, groupAnomalies } from '../lib/api.js'
 import styles from './ChainView.module.css'
 
 export default function ChainView({
@@ -20,6 +21,15 @@ export default function ChainView({
   const [modalOpen, setModalOpen] = useState(false)
   const [addedAttestations, setAddedAttestations] = useState([])
   const [newlyAddedId, setNewlyAddedId] = useState(null)
+  // Verdict + per-node anomalies start from the server-rendered result and refresh live
+  // whenever a supplier adds a node (re-running POST /verify on the working chain).
+  const [liveVerification, setLiveVerification] = useState(verification)
+  const [liveAnoms, setLiveAnoms] = useState(anomaliesByAtt)
+
+  useEffect(() => {
+    setLiveVerification(verification)
+    setLiveAnoms(anomaliesByAtt)
+  }, [verification, anomaliesByAtt])
 
   const workingChain = useMemo(() => {
     if (addedAttestations.length === 0) return chain
@@ -36,11 +46,22 @@ export default function ChainView({
   )
 
   const selected = selectedId ? attById.get(selectedId) : null
-  const selectedAnoms = selectedId ? anomaliesByAtt[selectedId] ?? [] : []
+  const selectedAnoms = selectedId ? liveAnoms[selectedId] ?? [] : []
 
-  function handleAttestation(att) {
+  async function handleAttestation(att) {
     setAddedAttestations((prev) => [...prev, att])
     setNewlyAddedId(att.attestation_id)
+    if (mode !== 'purchaser' || !chain?.product_attestation_id) return
+    const attestations = [...(chain.attestations ?? []), ...addedAttestations, att]
+    try {
+      const v = await verifyChain({ product_attestation_id: chain.product_attestation_id, attestations })
+      if (v) {
+        setLiveVerification(v)
+        setLiveAnoms(groupAnomalies(v.anomalies))
+      }
+    } catch {
+      /* keep the previous verdict if the live re-verify fails */
+    }
   }
 
   if (mode === 'supplier') {
@@ -80,7 +101,7 @@ export default function ChainView({
           </button>
           <ChainGraph
             chain={workingChain}
-            anomaliesByAtt={anomaliesByAtt}
+            anomaliesByAtt={liveAnoms}
             productId={product?.id}
             highlightId={newlyAddedId ?? highlightId}
             selectedId={selectedId}
@@ -96,7 +117,7 @@ export default function ChainView({
               totalCost={totalCost}
             />
           ) : (
-            <ProductSummary product={product} verification={verification} chain={workingChain} />
+            <ProductSummary product={product} verification={liveVerification} chain={workingChain} />
           )}
         </aside>
       </div>
@@ -105,6 +126,7 @@ export default function ChainView({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         chain={workingChain}
+        productId={product?.id}
         productName={product?.name}
         onAttestation={handleAttestation}
       />

@@ -12,5 +12,6 @@ class Anomaly:
         return {
             "type": self.type,
             "attestation_id": self.attestation_id,
+            "severity": self.severity,
             "details": self.details,
         }
